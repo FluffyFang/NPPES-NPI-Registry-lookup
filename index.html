@@ -1,0 +1,82 @@
+<html>
+	<head>
+		<title>NPPES NPI Registry lookup</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	</head>
+	<body>
+		<div class="container">
+			<form id="filters">
+				<div class="form-group">
+					<label for="npi">NPI Number:</label>
+					<input type="text" name="number" class="form-control" id="npi">
+				</div>
+				<div class="form-group">
+					<label for="fname">First Name:</label>
+					<input type="text" name="first_name" class="form-control" id="fname">
+				</div>
+				<div class="form-group">
+					<label for="lname">Last Name:</label>
+					<input type="text" name="last_name" class="form-control" id="lname">
+				</div>
+				<div class="form-group">
+					<label><input type="checkbox" name="ao" id="ao"> Using Authorized Official Name</label>
+				</div>
+				<div class="form-group">
+					<label for="taxonomy">Taxonomy Description:</label>
+					<input type="text" name="taxonomy_description" class="form-control" id="taxonomy">
+				</div>
+				<div class="form-group">
+					<label for="org">Organization Name:</label>
+					<input type="text" name="organization_name" class="form-control" id="org">
+				</div>
+				<div class="form-group">
+					<label for="city">City:</label>
+					<input type="text" name="city" class="form-control" id="city">
+				</div>
+				<div class="form-group">
+					<label for="state">State:</label>
+					<input type="text" name="state" class="form-control" id="state">
+				</div>
+				<div class="form-group">
+					<label for="zip">Postal Code:</label>
+					<input type="text" name="postal_code" class="form-control" id="zip">
+				</div>
+				<button type="submit">Submit</button>
+			</form>
+		</div>
+		<div id="responseTable"></div>
+	</body>
+	
+	<script>
+        document.getElementById('filters').addEventListener('submit', function(event) {
+            event.preventDefault(); 
+            const formData = new FormData(this);
+			if (formData["ao"] == "on") {
+				formData["ao"] = "AO"
+			} else {
+				formData["ao"] = "PROVIDER"
+			}
+			
+			var request = "https://npiregistry.cms.hhs.gov/api/?";
+			formData.forEach((val, key) => request += key + "=" + val + "&");
+			request += "country_code=US&address_purpose=PRIMARY&limit=200&version=2.1"
+			
+            fetch(request, {
+                method: 'GET',
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json(); // Parse JSON response from server
+            })
+            .then(data => {
+                // Update table
+                document.getElementById('responseTable').textContent = `Success: ${JSON.stringify(data)}`;
+            })
+            .catch(error => {
+                document.getElementById('responseTable').textContent = `Error: ${error.message}`;
+            });
+        });
+    </script>
+</html>
