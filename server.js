@@ -1,11 +1,34 @@
-var http = require("http");
-var fs = require("fs");
+const express = require('express');
+const cors = require('cors');
+const axios = require('axios');
 
-http.createServer(function (req, res) {
-	res.writeHead(200,{'content-type':'text/html'});
-	var theHomePageHTML = fs.readFileSync('index.html');
-	res.write(theHomePageHTML);
-	res.end();
-}).listen(3000);
+const app = express();
+app.use(cors({
+	origin: 'http://localhost:3000'
+}));
 
-console.log("Server is listening on port 3000...");
+app.use('/api', async (req, res) => {
+	try {
+		const _params = {
+			"country_code": "US",
+			"address_purpose": "PRIMARY",
+			"limit": "200",
+			"version": "2.1"
+		}
+		var tmp = new URLSearchParams(req.query);
+		Object.keys(_params).forEach((key) => tmp.append( key, _params[key] ));
+		const params = tmp;
+		
+		const NPIres = await axios.get('https://npiregistry.cms.hhs.gov/api', {params});
+		res.status(200).json(NPIres.data);
+		//res.status(200).json(NPIres.data["results"]);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to fetch the data.' });
+	}
+})
+
+app.get('/', (req, res) => {
+	res.sendFile(__dirname + '\\index.html');
+});
+
+app.listen(3000, () => console.log('Proxy server running on port 3000'));

@@ -57,26 +57,23 @@
 				formData["ao"] = "PROVIDER"
 			}
 			
-			var request = "https://npiregistry.cms.hhs.gov/api/?";
-			formData.forEach((val, key) => request += key + "=" + val + "&");
-			request += "country_code=US&address_purpose=PRIMARY&limit=200&version=2.1"
+			var request = "/api?" + new URLSearchParams(formData).toString() + "&version=2.1";
 			
-            fetch(request, {
-                method: 'GET',
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json(); // Parse JSON response from server
-            })
-            .then(data => {
-                // Update table
-                document.getElementById('responseTable').textContent = `Success: ${JSON.stringify(data)}`;
-            })
-            .catch(error => {
-                document.getElementById('responseTable').textContent = `Error: ${error.message}`;
-            });
+			fetch(request, {
+				method: 'GET'
+			})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Network response was not ok');
+				}
+				return response.json();
+			})
+			.then(data => {
+				document.getElementById('responseTable').textContent = `${JSON.stringify(data)}`;
+			})
+			.catch(error => {
+				document.getElementById('responseTable').textContent = `Error: ${error.message}`;
+			});
         });
     </script>
 </html>
