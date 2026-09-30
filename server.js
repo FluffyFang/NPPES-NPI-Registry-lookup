@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
+const path = require('path');
 
 const app = express();
 app.use(cors({
@@ -28,7 +29,7 @@ app.use('/api', async (req, res) => {
 })
 
 app.get('/', (req, res) => {
-	res.sendFile(__dirname + '\\index.html');
+	res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(3000, () => console.log('Proxy server running on port 3000'));
+app.listen(3000, () => console.log('NPI application running at 127.0.0.1:3000'));
