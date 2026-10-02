@@ -1,0 +1,25 @@
+.table-container {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  width: 100%;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Keeps the header fixed at the top while scrolling */
+th {
+  position: sticky;
+  top: 0;
+  background-color: #f4f4f4;
+  z-index: 1; /* Ensures it stays above row data */
+}

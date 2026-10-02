@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="en">
 <html>
 	<head>
 		<title>NPPES NPI Registry lookup</title>
@@ -44,10 +46,134 @@
 				<button type="submit">Submit</button>
 			</form>
 		</div>
-		<div id="responseTable"></div>
+		<div>
+			<button type="button" id="csv" disabled>Download as CSV</button>
+		</div>
+		<div class="table-container" id="responseTable"></div>
 	</body>
 	
 	<script>
+		function exportTableToCSV() {
+			const table = document.getElementById("responseTable");
+			const rows = table.querySelectorAll('tr');
+			var csvLines = [];
+			
+			for (const row of rows) {
+				const cells = row.querySelectorAll('th, td');
+				
+				const rowData = Array.from(cells).map(cell => {
+					let text = cell.innerText.trim();
+					
+					if (text.includes(',') || text.includes('"') || text.includes('\n')) {
+						text = `"${text.replace(/"/g, '""')}"`;
+					}
+					return text;
+				});
+
+				csvLines.push(rowData.join(','));
+			}
+			const csvString = csvLines.join('\n');
+			
+			
+			var element = document.createElement('a');
+			element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(csvString));
+			element.setAttribute('download', 'NPI.csv');
+			element.style.display = 'none';
+			document.body.appendChild(element);
+			element.click();
+			document.body.removeChild(element);
+		}
+
+		document.getElementById('csv').addEventListener('click', function(event) {
+			event.preventDefault();
+			exportTableToCSV();
+		})
+		
+		function simplifyResponse(res) {
+			var results = res['results'];
+			simpleOutput = [];
+			
+			for (const entry of results) {
+				var simpleEntry = {
+					'NPI number':entry['number'],
+					'Name':"",
+					'Credentials':"",
+					'Title':"",
+					'Organization':"",
+					'Address line 1':"",
+					'Address line 2':"",
+					'Phone number':"",
+					'Description':"",
+					'State':"",
+					'License Number':""
+				}
+				
+				simpleEntry['Name'] = ('first_name' in entry['basic'])? 
+					entry['basic']['first_name'] + " " + entry['basic']['last_name']: 
+					entry['basic']['authorized_official_first_name'] + " " + entry['basic']['authorized_official_last_name'];
+				simpleEntry['Credentials'] = ('credential' in entry['basic'])?
+					entry['basic']['credential']:
+					('authorized_official_credential' in entry['basic'])?
+						entry['basic']['authorized_official_credential']: "";
+				simpleEntry['Title'] = ('title_or_position' in entry['basic'])?
+					entry['basic']['title_or_position']:
+					('authorized_official_title_or_position' in entry['basic'])?
+						entry['basic']['authorized_official_title_or_position']: "";
+				simpleEntry['Organization'] = ('organization_name' in entry['basic'])?
+					entry['basic']['organization_name']: "";
+				
+				for (const address of entry['addresses']) {
+					if (address['address_purpose'] == "LOCATION") {
+						simpleEntry['Address line 1'] = address['address_1'];
+						simpleEntry['Address line 2'] = address['city'] + ", " + address['state'] + " " + address['postal_code'];
+						simpleEntry['Phone number'] = address['telephone_number'];
+					}
+				}
+				for (const taxonomy of entry['taxonomies']) {
+					if (taxonomy['primary']) {
+						simpleEntry['Description'] = taxonomy['desc'];
+						simpleEntry['State'] = taxonomy['state'];
+						simpleEntry['License Number'] = taxonomy['license']
+					}
+				}
+				simpleOutput.push(simpleEntry);
+			}
+			tableAsArray = simpleOutput;
+			return simpleOutput;
+		}
+		
+		function createTable(containerId, data) {
+			const container = document.getElementById(containerId);
+
+			const table = document.createElement("table");
+			const thead = document.createElement("thead");
+			const tbody = document.createElement("tbody");
+
+			const headers = Object.keys(data[0]);
+			const headerRow = document.createElement("tr");
+		  
+			headers.forEach(headerText => {
+				const th = document.createElement("th");
+				th.textContent = headerText.toUpperCase();
+				headerRow.appendChild(th);
+			});
+			thead.appendChild(headerRow);
+
+			data.forEach(item => {
+				const row = document.createElement("tr");
+				headers.forEach(key => {
+					const td = document.createElement("td");
+					td.textContent = item[key];
+					row.appendChild(td);
+				});
+				tbody.appendChild(row);
+			});
+
+			table.appendChild(thead);
+			table.appendChild(tbody);
+			container.appendChild(table);
+		}
+		
         document.getElementById('filters').addEventListener('submit', function(event) {
             event.preventDefault(); 
             const formData = new FormData(this);
@@ -69,7 +195,9 @@
 				return response.json();
 			})
 			.then(data => {
-				document.getElementById('responseTable').textContent = `${JSON.stringify(data)}`;
+				var simpleResponse = simplifyResponse(data);
+				createTable("responseTable", simpleResponse);
+				document.getElementById('csv').disabled = false;
 			})
 			.catch(error => {
 				document.getElementById('responseTable').textContent = `Error: ${error.message}`;
