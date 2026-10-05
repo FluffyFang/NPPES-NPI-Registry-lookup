@@ -33,4 +33,4 @@ app.get('/', (req, res) => {
 	res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(3000, () => console.log('NPI application running at 127.0.0.1:3000'));
+app.listen(3000, () => console.log('NPI application running on port 3000'));

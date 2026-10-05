@@ -1,0 +1,13 @@
+{
+  "main": "server.js",
+  "mainFormat": "commonjs",
+  "output": "NPI.exe",
+  "disableExperimentalSEAWarning": true,
+  "useSnapshot": false,
+  "useCodeCache": false,
+  "useVfs": true,
+  "assets": {
+    "index.html": "./../index.html",
+	"./public/style.css": "./../public/style.css"
+  }
+}
